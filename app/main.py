@@ -3,11 +3,14 @@ import socket
 
 # HTTP request parsing
 def parse_request(req):
-    print(f"HTTP Request: ${req}")
+    print(f"HTTP Request: {req}")
     req_str = " ".join(req).split(" ")
+    print("req_str: ", req_str)
     req_target = req_str[1]
-    print("req_target: ", req_target)  # debugging
-
+    print("req_target: ", req_target)  # /user-agent
+    user_agent = req_str[6]
+    print(f"user_agent:  {user_agent}") # the value of user-agent
+    
     if req_target == "/":
         return b"HTTP/1.1 200 OK\r\n\r\n"
     elif req_target.startswith("/echo"):
@@ -15,6 +18,18 @@ def parse_request(req):
         return f"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {len(res_body)}\r\n\r\n{res_body}".encode(
             "utf-8"
         )
+    elif req_target.startswith("/user-agent"):
+        # u_agent = "".join(req_target[6:].split("\r\n"))
+        print(
+            f"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {len(user_agent)}\r\n\r\n{user_agent}".encode(
+                "utf-8"
+            )
+        )
+        
+        return f"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {len(user_agent)}\r\n\r\n{user_agent}".encode(
+            "utf-8"
+        )
+    # --------------------------------------------- #
     else:
         return b"HTTP/1.1 404 Not Found\r\n\r\n"
 
