@@ -2,6 +2,9 @@ import socket
 import argparse
 import os
 import threading
+import select
+
+import sys
 
 BUFF_SZ = 1024
 ENC = "utf-8"
