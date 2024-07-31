@@ -6,7 +6,7 @@ import threading
 
 BUFF_SZ = 1024
 ENC = "utf-8"
-RES200 = "HTTP/1.1 200 OK\r\n"
+# RES200 = "HTTP/1.1 200 OK\r\n"
 
 
 # `/echo/{str}` endpoint
@@ -86,11 +86,16 @@ def parse_request(req, directory):
     accept_encoding = req[2]
     print("accept_encoding", accept_encoding)
 
-    if accept_encoding == "Accept-Encoding: gzip":
-        print("we got gzip!!!!!!")
-        result = gzip()
-        return result
+    # --------------------------------------------- #
 
+    # Handle gzip
+    if "gzip" in accept_encoding:
+        return gzip()
+
+    if accept_encoding.startswith("Accept-Encoding:") and "gzip" not in accept_encoding:
+        return f"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\n\r\n".encode("utf-8")
+
+    # Handle POST
     if req_method == "POST":
         result = post_req_body(req, directory)
         return result
@@ -105,6 +110,7 @@ def parse_request(req, directory):
         result = user_agent(req)
         return result
     elif req_target.startswith("/files"):
+        print("we got /files/!!!!")
         result = get_filename(req, directory)
         return result
     else:
