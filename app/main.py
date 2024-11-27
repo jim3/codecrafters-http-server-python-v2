@@ -6,7 +6,7 @@ import threading
 BUFF_SZ = 1024
 ENC = "utf-8"
 
-# `/echo/{str}` endpoint
+# /echo/{str} endpoint
 def echo(req):
     req_str = " ".join(req).split(" ") # Split the request into words   
     req_target = req_str[1] # Extract the request target path
