@@ -3,45 +3,30 @@ import argparse
 import os
 import threading
 
-
 BUFF_SZ = 1024
 ENC = "utf-8"
-# RES200 = "HTTP/1.1 200 OK\r\n"
-
 
 # `/echo/{str}` endpoint
 def echo(req):
-    # Split the request into words
-    req_str = " ".join(req).split(" ")
-    # Extract the request target path
-    req_target = req_str[1]
-    # Extract the request body from the echo endpoint `/echo/{str}`
-    res_body = "".join(req_target[6:].split(" "))
+    req_str = " ".join(req).split(" ") # Split the request into words   
+    req_target = req_str[1] # Extract the request target path
+    res_body = "".join(req_target[6:].split(" ")) # Extract the request body from the echo endpoint `/echo/{str}`
     return f"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {len(res_body)}\r\n\r\n{res_body}".encode(
         "utf-8"
     )
-
-
 def user_agent(req):
     req_str = " ".join(req).split(" ")
-    # Extract the user-agent string
     user_agent = req_str[6]
     return f"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {len(user_agent)}\r\n\r\n{user_agent}".encode(
         "utf-8"
     )
-
-
 def get_filename(req, directory):
     req_str = " ".join(req).split(" ")
     req_target = req_str[1]
-    # get the file name
     filename = "".join(req_target[7:].split(" "))
-    # create the full path so you can read the file
     full_path = os.path.join(directory, filename)
-    # Check if the file exists
     if not os.path.exists(full_path):
         return b"HTTP/1.1 404 Not Found\r\n\r\n"
-
     # read the contents of the file and append it to the response
     with open(full_path, "rt") as file:
         data = file.read()
@@ -50,8 +35,6 @@ def get_filename(req, directory):
     return f"HTTP/1.1 200 OK\r\nContent-Type: application/octet-stream\r\nContent-Length: {len(res_body)}\r\n\r\n{res_body}".encode(
         "utf-8"
     )
-
-
 def post_req_body(req, directory):
     req_str = " ".join(req).split(" ")
     req_target = req_str[1]
@@ -59,47 +42,30 @@ def post_req_body(req, directory):
     full_path = os.path.join(directory, filename)
     # get the request body
     req_body = req[5]
-
     # write the contents of the request body to the file
     with open(full_path, "wt") as file:
         print("req_body: ", req_body)
         file.write(req_body)
     return f"HTTP/1.1 201 Created\r\n\r\n".encode("utf-8")
-
-
 def gzip():
     return f"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Encoding: gzip\r\n\r\n".encode(
         "utf-8"
     )
-
-
 # routes
 def parse_request(req, directory):
     print(f"HTTP Request: {req}")
-    # Split the request into words
-    req_str = " ".join(req).split(" ")
-    # Extract the request target path
-    req_target = req_str[1]
-    # Used for POST
-    req_method = req_str[0]
-
+    req_str = " ".join(req).split(" ") # Split the request into words
+    req_target = req_str[1] # Extract the request target path
+    req_method = req_str[0] # Used for POST
     accept_encoding = req[2]
     print("accept_encoding", accept_encoding)
-
-    # --------------------------------------------- #
-
-    # Handle gzip
     if "gzip" in accept_encoding:
         return gzip()
-
     if accept_encoding.startswith("Accept-Encoding:") and "gzip" not in accept_encoding:
         return f"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\n\r\n".encode("utf-8")
-
-    # Handle POST
     if req_method == "POST":
         result = post_req_body(req, directory)
         return result
-
     # Handle endpoints
     if req_target == "/":
         return b"HTTP/1.1 200 OK\r\n\r\n"
@@ -110,7 +76,6 @@ def parse_request(req, directory):
         result = user_agent(req)
         return result
     elif req_target.startswith("/files"):
-        print("we got /files/!!!!")
         result = get_filename(req, directory)
         return result
     else:
@@ -119,8 +84,7 @@ def parse_request(req, directory):
 
 def handle_connection(conn, addr, directory):
     print(f"Accepted new connection from {addr}")
-    # Receive the request
-    data = conn.recv(BUFF_SZ)
+    data = conn.recv(BUFF_SZ) # Receive the request
     print(f"Raw request: {data}")
     req = data.decode(ENC).split("\r\n")
     response = parse_request(req, directory)
